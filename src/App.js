@@ -1,19 +1,30 @@
 import React, {useState, useEffect} from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { randomColor } from 'randomcolor'
-import Draggable from 'react-draggable'
+import TodoCreator from './components/TodoCreator'
+import Todo from './components/Todo'
 import './App.css'
 
 function App() {
+
   const [todo, setTodo] = useState('')
   const [todos, setTodos] = useState(JSON.parse(localStorage.getItem('todos')) || [])
+  
 
+  const todoText = todos.filter(item => item.todo).map((item) => item.todo)
+  let size = 1
+  let subarray = []
+  
+  for (let i = 0; i <Math.ceil(todoText.length/size); i++){
+    subarray[i] = todoText.slice((i*size), (i*size) + size)
+  }
+ 
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos))
   }, [todos])
 
   const newTodo = () => {
-    if(todo.trim() !== '') {
+    if(todo.trim() !== '' && !subarray.flat().map(item => item).toString().includes(todo)) {
       const newTodo = {
         id: uuidv4(),
         todo,
@@ -21,34 +32,17 @@ function App() {
           luminosity: 'light',
         }),
         defaultPos: {
-          x: 500,
-          y: -500
+          x: 589,
+          y: -210
         }
       }
+  
       setTodos((todos) => [...todos, newTodo])
       setTodo('')
     } else {
-      alert('Enter value')
+      alert('Enter or change a value')
       setTodo('')
     }
-  }
-
-  const deleteTodo = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id))
-  }
-
-  const toggleTodo = (id) => {
-    setTodos(todos.map((todo) => {
-      if (todo.id === id) {
-      todo.completed = !todo.completed
-    }
-    return todo}))
-  }
-
-  const updatePosition = (data, index) => {
-    let newArr = [...todos]
-    newArr[index].defaultPos = {x: data.x, y: data.y}
-    setTodos(newArr)
   }
 
   const pressEnter = (e) => {
@@ -59,33 +53,17 @@ function App() {
 
   return (
     <div className='App'>
-      <div className='wrapper'>
-        <input onChange={(e) => setTodo(e.target.value)} onKeyPress={(e) => pressEnter(e)} value={todo} type='text' placeholder='Create todo'></input>
-        <button onClick={newTodo} className='create'>Create</button>
-      </div>
-
-      {todos.map((todo, index) => {
-        return (
-          <Draggable
-            key={index}
-            defaultPosition={todo.defaultPos}
-            onStop={(e, data) => {
-              updatePosition(data, index)
-            }}
-          >
-            <div className={todo.completed ? 'complete' : 'todo__item'} style={{backgroundColor: todo.color}}>
-              {`${todo.todo}`}
-              <input
-                type='checkbox'
-                checked={todo.completed}
-                onChange={() => toggleTodo(todo.id)}
-                className={'todoCheck'}
-              />
-              <button onClick={() => deleteTodo(todo.id)} className='delete'>X</button>
-            </div>
-          </Draggable>
-        )
-      })}
+      <TodoCreator 
+        todo={todo} 
+        newTodo={newTodo}
+        setTodo={setTodo}
+        pressEnter={pressEnter}
+      />
+      <Todo 
+        todos={todos} 
+        setTodos={setTodos} 
+      />
+      
     </div>
   );
 }
